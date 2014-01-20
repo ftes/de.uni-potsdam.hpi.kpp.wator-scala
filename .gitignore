@@ -1,0 +1,14 @@
+*.class
+.cache
+
+archive.tar
+
+bin/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# in/out
+*.txt
