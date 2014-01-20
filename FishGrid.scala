@@ -8,15 +8,17 @@ import wator.WATER
 // Represents an ocean grid data structure, together with helper functions
 class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, starvationTimeSharks: Int) {
   import scala.util.Random
+  
+  var computed = Array.ofDim[Boolean](numCells, numCells)
 
   val water = (WATER, 0, 0)
   val fish = (FISH, eggTimeLimitFish, 0)
   val shark = (SHARK, eggTimeLimitSharks, starvationTimeSharks)
   val types = Array(water, fish, shark)
   
-  def randomType(): Tuple3[Int, Int, Int] = {
-    types(Random.nextInt(3))
-  }
+  def getType(typ: Int) = types(typ)
+  
+  def randomType(): Tuple3[Int, Int, Int] = types(Random.nextInt(3))
   
   val nCells = numCells
   var data: FishGridType = random // this is the initial ocean setup
@@ -90,6 +92,7 @@ class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, st
         inRandomDirection(c, (x, y) => {
           if (data(x)(y)._1 == WATER) {
             data(x)(y) = types(old._1)
+            computed(x)(y) = true
             data(c._1)(c._2) = (old._1, types(old._1)._2, old._3)
             true
           } else false
@@ -102,19 +105,22 @@ class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, st
         if (data(x)(y)._1 == WATER) {
           data(x)(y) = data(c._1)(c._2)
           data(c._1)(c._2) = water
+          computed(x)(y) = true
           true
         } else false
       })
     }
+    
+    computed = Array.ofDim[Boolean](numCells, numCells)
 
     coordinates.foreach(c => {
-      data(c._1)(c._2)._1 match {
-        case FISH => {
+      (data(c._1)(c._2)._1, computed(c._1)(c._2)) match {
+        case (FISH, false) => {
           val newC = moveInRandomDirection(c)
           spawnDescendant(newC)
         }
 
-        case SHARK => {
+        case (SHARK, false) => {
           val old = data(c._1)(c._2)
 
           if (old._3 > 0) {
@@ -143,7 +149,7 @@ class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, st
           }
         }
 
-        case WATER =>
+        case _ =>
       }
     })
   }

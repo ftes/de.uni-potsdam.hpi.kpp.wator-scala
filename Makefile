@@ -1,5 +1,5 @@
 SC=scalac
-SOURCES=Wator.scala FishGrid.scala FishDisplay.scala package.scala RunWator.scala
+SOURCES=Wator.scala FishGrid.scala package.scala
 
 all: $(SOURCES)
 	$(SC) $(SOURCES)
