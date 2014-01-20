@@ -21,7 +21,7 @@ class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, st
   def randomType(): Tuple3[Int, Int, Int] = types(Random.nextInt(3))
   
   val nCells = numCells
-  var data: FishGridType = random // this is the initial ocean setup
+  var data: FishGridType = splitTank // this is the initial ocean setup
 
   // generator for (x, y) coordinate tuples
   def coordinates =
@@ -133,6 +133,7 @@ class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, st
                 //println("shark ate fish")
                 data(x)(y) = (old._1, old._2, starvationTimeSharks)
                 data(c._1)(c._2) = water
+                computed(x)(y) = true
                 true
               } else false
             })
