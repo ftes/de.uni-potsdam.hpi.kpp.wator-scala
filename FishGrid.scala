@@ -6,9 +6,18 @@ import wator.SHARK
 import wator.WATER
 
 // Represents an ocean grid data structure, together with helper functions
-class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
+class FishGrid(numCells: Int, eggTimeLimitFish: Int, eggTimeLimitSharks: Int, starvationTimeSharks: Int) {
   import scala.util.Random
 
+  val water = (WATER, 0, 0)
+  val fish = (FISH, eggTimeLimitFish, 0)
+  val shark = (SHARK, eggTimeLimitSharks, starvationTimeSharks)
+  val types = Array(water, fish, shark)
+  
+  def randomType(): Tuple3[Int, Int, Int] = {
+    types(Random.nextInt(3))
+  }
+  
   val nCells = numCells
   var data: FishGridType = random // this is the initial ocean setup
 
@@ -30,31 +39,29 @@ class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
   // Initial grid configuration, needed for "oldGrid" painting optimization below
   def invalid: FishGridType = {
     return Array.tabulate(numCells, numCells)(
-      (x, y) => (-1, maxAge, maxEnergy))
+      (x, y) => (-1, 0, 0))
   }
 
   // Initial grid configuration, with random placement
   def random: FishGridType = {
     return Array.tabulate(numCells, numCells)(
-      (x, y) => (Random.nextInt(3), maxAge, maxEnergy))
+      (x, y) => randomType)
   }
 
   // Initial grid configuration for debugging, with clear field separation
   def splitTank: FishGridType = {
     return Array.tabulate(numCells, numCells)(
-      (x, y) => ((
+      (x, y) => (
         if (x < numCells / 2) {
-          if (y < numCells / 2)
-            FISH
-          else
-            SHARK
-        } else WATER), maxAge, maxEnergy))
+          if (y < numCells / 2) fish
+          else shark
+        } else water))
   }
 
   // Initial grid configuration, with lonely fish swimming the ocean
   def singleFish: FishGridType = {
     return Array.tabulate(numCells, numCells)(
-      (x, y) => ((if (x == 0 && y == 0) FISH else WATER), maxAge, maxEnergy))
+      (x, y) => (if (x == 0 && y == 0) fish else water))
   }
 
   // computation of one simulation round
@@ -82,8 +89,8 @@ class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
       else {
         inRandomDirection(c, (x, y) => {
           if (data(x)(y)._1 == WATER) {
-            data(x)(y) = (old._1, maxAge, maxEnergy)
-            data(c._1)(c._2) = (old._1, maxAge, old._3)
+            data(x)(y) = types(old._1)
+            data(c._1)(c._2) = (old._1, types(old._1)._2, old._3)
             true
           } else false
         })
@@ -94,7 +101,7 @@ class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
       inRandomDirection(c, (x, y) => {
         if (data(x)(y)._1 == WATER) {
           data(x)(y) = data(c._1)(c._2)
-          data(c._1)(c._2) = (WATER, maxAge, maxEnergy)
+          data(c._1)(c._2) = water
           true
         } else false
       })
@@ -118,8 +125,8 @@ class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
             var newC = inRandomDirection(c, (x, y) => {
               if (data(x)(y)._1 == FISH) {
                 //println("shark ate fish")
-                data(x)(y) = (old._1, old._2, maxEnergy)
-                data(c._1)(c._2) = (WATER, maxAge, maxEnergy)
+                data(x)(y) = (old._1, old._2, starvationTimeSharks)
+                data(c._1)(c._2) = water
                 true
               } else false
             })
@@ -132,7 +139,7 @@ class FishGrid(numCells: Int, maxAge: Int, maxEnergy: Int) {
             //must starve
           } else {
             //println("shark starved")
-            data(c._1)(c._2) = (WATER, maxAge, maxEnergy)
+            data(c._1)(c._2) = water
           }
         }
 
